@@ -4,7 +4,7 @@
 set -euo pipefail
 
 # TODO: replace with your actual Git repository URL
-env_repo="https://YOUR_GIT_REPO_URL_HERE.git"
+env_repohttps://github.com/ASolidBPlus/sdn-env-scripts"
 
 # Temporary clone directory
 tmp_dir=$(mktemp -d)
