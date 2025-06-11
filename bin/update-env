@@ -3,8 +3,8 @@
 
 set -euo pipefail
 
-# TODO: replace with your actual Git repository URL
-env_repo="https://YOUR_GIT_REPO_URL_HERE.git"
+# Git repository URL for environment scripts
+env_repo="https://github.com/ASolidBPlus/sdn-env-scripts.git"
 
 # Temporary clone directory
 tmp_dir=$(mktemp -d)
@@ -51,8 +51,14 @@ if [ -d "$tmp_dir/utils/ryu" ]; then
   sudo cp -r "$tmp_dir/utils/ryu/"* /opt/utils/ryu/
   sudo chown -R root:root /opt/utils/ryu
   sudo chmod -R 755 /opt/utils/ryu
+
+  echo "Adding /opt/utils/ryu to Ryu venv site-packages via .pth"
+  sudo tee /opt/dep/ryu39/lib/python3.9/site-packages/ryu_utils.pth > /dev/null <<EOF
+/opt/utils/ryu
+EOF
 else
   echo "Warning: 'utils/ryu' dir not found in repo" >&2
+fi
 fi
 
 # 4) Install Mininet utils into system Python and copy to /opt/utils/mininet
@@ -67,8 +73,13 @@ if [ -d "$tmp_dir/utils/mininet" ]; then
   sudo cp -r "$tmp_dir/utils/mininet/"* /opt/utils/mininet/
   sudo chown -R root:root /opt/utils/mininet
   sudo chmod -R 755 /opt/utils/mininet
+
+  echo "Adding /opt/utils/mininet to system site-packages via .pth"
+  SP=$(python3 -c "import site; print(site.getsitepackages()[0])")
+  echo "/opt/utils/mininet" | sudo tee "$SP/mininet_utils.pth" > /dev/null
 else
   echo "Warning: 'utils/mininet' dir not found in repo" >&2
+fi
 fi
 
 echo "update-env complete!"
