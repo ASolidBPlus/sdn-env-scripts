@@ -70,6 +70,16 @@ else
   echo "Warning: 'utils/mininet' dir not found in repo" >&2
 fi
 
+# 6) Update Static HTML Files
+if [ -d "$tmp_dir/www" ]; then
+  echo "Installing html files to /var/www..."
+  sudo mkdir -p /var/www
+  sudo cp $tmp_dir/www/* /var/www/
+else
+  echo "Warning: 'www' dir not found in repo" >&2
+fi
+
+
 # 5) Ensure update-env runs on system startup via cron
 cron_entry="@reboot /usr/local/bin/update-env"
 # Check if cron entry exists for this user

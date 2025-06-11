@@ -146,13 +146,19 @@ apt install -y caddy
 echo "Writing Caddyfile…"
 cat > /etc/caddy/Caddyfile <<'EOF'
 :81 {
-
-  log {
-    output stdout
-    level DEBUG   # turn down later if noisy
+  # Serve static dashboard at /
+  handle_path /index.html {
+    root * /var/www
+    file_server
   }
 
-  # /code/* → code-server on 8081  (handle_path strips /code)
+  handle_path / {
+    root * /var/www
+    try_files {path} /index.html
+    file_server
+  }
+
+  # /code/* → code-server on 8081
   handle_path /code/* {
     reverse_proxy localhost:8081
   }
@@ -163,13 +169,13 @@ cat > /etc/caddy/Caddyfile <<'EOF'
     redir /flowmanager/ 302
   }
 
-  # /flowmanager/*  →  /home/* on FlowManager server
+  # /flowmanager/* → /home/* on FlowManager server
   handle_path /flowmanager/* {
     rewrite * /home{path}
     reverse_proxy localhost:8080
   }
 
-  # every other request untouched → FlowManager root
+  # catch-all: everything else → FlowManager
   handle {
     reverse_proxy localhost:8080
   }
