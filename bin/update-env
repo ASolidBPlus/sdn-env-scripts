@@ -37,49 +37,37 @@ else
   echo "Warning: 'bin' dir not found in repo" >&2
 fi
 
-# 3) Install Ryu utils into Ryu venv and copy to /opt/utils/ryu
+# 3) Make utils/ryu importable in the Ryu venv
 if [ -d "$tmp_dir/utils/ryu" ]; then
-  echo "Installing Ryu utils into Ryu venv at /opt/dep/ryu39..."
-  source /opt/dep/ryu39/bin/activate
-  pip install --upgrade pip setuptools wheel
-  pip install -e "$tmp_dir/utils/ryu"
-  deactivate
-
-  echo "Copying Ryu utils to /opt/utils/ryu..."
+  echo "Copying Ryu utils to /opt/utils/ryu…"
   sudo mkdir -p /opt/utils/ryu
   sudo rm -rf /opt/utils/ryu/*
   sudo cp -r "$tmp_dir/utils/ryu/"* /opt/utils/ryu/
   sudo chown -R root:root /opt/utils/ryu
   sudo chmod -R 755 /opt/utils/ryu
 
-  echo "Adding /opt/utils/ryu to Ryu venv site-packages via .pth"
+  echo "Adding /opt/utils/ryu to Ryu venv via .pth…"
   sudo tee /opt/dep/ryu39/lib/python3.9/site-packages/ryu_utils.pth > /dev/null <<EOF
 /opt/utils/ryu
 EOF
 else
-  echo "Warning: 'utils/ryu' dir not found in repo" >&2
-fi
+  echo "Warning: 'utils/ryu' dir not found" >&2
 fi
 
-# 4) Install Mininet utils into system Python and copy to /opt/utils/mininet
+# 4) Make utils/mininet importable in system Python
 if [ -d "$tmp_dir/utils/mininet" ]; then
-  echo "Installing Mininet utils into system Python..."
-  sudo pip3 install --upgrade pip setuptools wheel
-  sudo pip3 install -e "$tmp_dir/utils/mininet"
-
-  echo "Copying Mininet utils to /opt/utils/mininet..."
+  echo "Copying Mininet utils to /opt/utils/mininet…"
   sudo mkdir -p /opt/utils/mininet
   sudo rm -rf /opt/utils/mininet/*
   sudo cp -r "$tmp_dir/utils/mininet/"* /opt/utils/mininet/
   sudo chown -R root:root /opt/utils/mininet
   sudo chmod -R 755 /opt/utils/mininet
 
-  echo "Adding /opt/utils/mininet to system site-packages via .pth"
-  SP=$(python3 -c "import site; print(site.getsitepackages()[0])")
-  echo "/opt/utils/mininet" | sudo tee "$SP/mininet_utils.pth" > /dev/null
+  echo "Adding /opt/utils/mininet to system site-packages via .pth…"
+  SITEPKG=$(python3 -c "import site; print(site.getsitepackages()[0])")
+  echo "/opt/utils/mininet" | sudo tee "$SITEPKG/mininet_utils.pth" > /dev/null
 else
   echo "Warning: 'utils/mininet' dir not found in repo" >&2
-fi
 fi
 
 echo "update-env complete!"

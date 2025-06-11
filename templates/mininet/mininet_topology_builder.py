@@ -1,4 +1,4 @@
-from utils.mininet.helpers import createInitialNetwork, safeMininetStartupAndExit
+from mininet_helpers import createInitialNetwork, safeMininetStartupAndExit
 
 # ╔══════════════════════════════════════════════╗
 # ║              TOPOLOGY DEFINITIONS            ║

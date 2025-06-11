@@ -9,7 +9,7 @@ fi
 
 # 0) Pre-create environment directories
 echo "Creating workspace and template directories..."
-mkdir -p /opt/workspace /opt/templates /opt/workspace/ryu
+mkdir -p /opt/workspace /opt/templates /opt/utils /opt/workspace/ryu
 
 # Set ownership & permissions
 chown root:root /opt/templates
@@ -40,7 +40,8 @@ cat <<EOF | sudo -u student tee "$WORKSPACE_FILE" > /dev/null
 {
   "folders": [
     { "path": "/opt/workspace" },
-    { "path": "/opt/templates" }
+    { "path": "/opt/templates" },
+    { "path": "/opt/utils" }
   ],
   "settings": {}
 }
@@ -130,8 +131,21 @@ echo "FlowManager installed at /opt/dep/flowmanager"
 # -----------------------------------------------
 if [ -f "$(dirname "$0")/bin/update-env" ]; then
   echo "Installing update-env..."
-  install -m 755 "$(dirname "$0")/bin/update-env" /usr/local/bin/update-env
+  sudo install -m 755 "$(dirname "$0")/bin/update-env" /usr/local/bin/update-env
   echo "You can now run 'update-env' to pull templates, bins, and utils."
+
+  # Ask to schedule on startup
+  read -p "Would you like to schedule update-env to run on every boot? [y/N] " ans
+  if [[ "$ans" =~ ^[Yy]$ ]]; then
+    (crontab -l 2>/dev/null; echo "@reboot /usr/local/bin/update-env") | crontab -
+    echo "Scheduled update-env to run at startup via cron."
+  fi
+
+  # Ask to run now
+  read -p "Run update-env now? [y/N] " ans2
+  if [[ "$ans2" =~ ^[Yy]$ ]]; then
+    /usr/local/bin/update-env
+  fi
 else
   echo "Warning: update-env script not found in bin/. Skipping update-env install." >&2
 fi

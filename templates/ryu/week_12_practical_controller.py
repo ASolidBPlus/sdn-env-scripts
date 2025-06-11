@@ -3,7 +3,7 @@ from ryu.controller import ofp_event
 from ryu.controller.handler import MAIN_DISPATCHER, CONFIG_DISPATCHER, set_ev_cls
 from ryu.ofproto import ofproto_v1_3, inet
 from ryu.lib.packet import packet, ethernet, ipv4, udp, arp, ether_types
-from maze import Maze
+from ryu_maze import Maze
 
 class TemplateRyuApp(app_manager.RyuApp):
     """
