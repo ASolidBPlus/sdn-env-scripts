@@ -52,6 +52,7 @@ chown student:student "$WORKSPACE_FILE"
 systemctl disable --now code-server@student
 
 # Override systemd unit to launch code-server with our workspace\mkdir -p /etc/systemd/system/code-server@student.service.d
+mkdir -p /etc/systemd/system/code-server@student.service.d
 cat <<EOF >/etc/systemd/system/code-server@student.service.d/override.conf
 [Service]
 ExecStart=
