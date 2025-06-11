@@ -19,7 +19,7 @@ fi
 # 2) simple_switch prompt
 read -rp "Include ryu.app.simple_switch? [y/N] " run_ss
 if [[ "$run_ss" =~ ^[Yy] ]]; then
-    CONTROLLERS+=("ryu.app.simple_switch")
+    CONTROLLERS+=("ryu.app.simple_switch_13")
 fi
 
 # 3) Local scripts discovery and selection

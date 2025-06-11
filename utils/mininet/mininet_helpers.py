@@ -18,14 +18,6 @@ import sys
 # You don’t need to touch these – they just help Mininet behave a bit nicer.
 # Go to the TOPOLOGY DEFINITIONS section for code relevant to you! :)
 
-def openXtermForDevices(net):
-    """Launches a terminal window for each device so you can run things like tcpdump, ping, etc.
-    This only runs if you say yes to the prompt when starting your topology.
-    """
-    if input("Launch with Terminals? Y/N: ").strip().lower() == 'y':
-        for device in net.hosts + net.switches:
-            makeTerm(device, title=device.name)
-
 def controllerReachableCheck(ip, port):
     """Checks if the controller is up and accepting connections on the specified IP/port.
     You don’t need to care about this logic if unless you’re debugging controller startup. Ignore this!
@@ -72,10 +64,8 @@ def safeMininetStartupAndExit(net):
 
     Example usage: safeMininetStartupAndExit(net)
     """
-    openXtermForDevices(net)
     CLI(net)
     net.stop()
     mininet.clean.cleanup()
-    subprocess.call(['pkill', '-f', 'xterm'])  # Kills leftover xterm windows just in case.
     print("Mininet shutdown complete. If ryu-manager was running, make sure to restart it before re-launching mininet.")
     sys.exit()

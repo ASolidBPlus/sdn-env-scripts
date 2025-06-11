@@ -128,7 +128,61 @@ chown -R student:student /opt/dep/flowmanager
 
 echo "FlowManager installed at /opt/dep/flowmanager"
 
-# 9. Install update-env script for future updates
+
+# 9. Caddy reverse-proxy  (port 81)
+echo "Installing Caddy…"
+apt install -y debian-keyring debian-archive-keyring curl gnupg apt-transport-https
+if [ ! -f /usr/share/keyrings/caddy-stable-archive-keyring.gpg ]; then
+  curl -1sLf https://dl.cloudsmith.io/public/caddy/stable/gpg.key | \
+    gpg --dearmor -o /usr/share/keyrings/caddy-stable-archive-keyring.gpg
+fi
+echo "deb [signed-by=/usr/share/keyrings/caddy-stable-archive-keyring.gpg] \
+https://dl.cloudsmith.io/public/caddy/stable/deb/debian any-version main" \
+  | tee /etc/apt/sources.list.d/caddy-stable.list >/dev/null
+
+apt update
+apt install -y caddy
+
+echo "Writing Caddyfile…"
+cat > /etc/caddy/Caddyfile <<'EOF'
+:81 {
+
+  log {
+    output stdout
+    level DEBUG   # turn down later if noisy
+  }
+
+  # /code/* → code-server on 8081  (handle_path strips /code)
+  handle_path /code/* {
+    reverse_proxy localhost:8081
+  }
+
+  # redirect bare /flowmanager → /flowmanager/
+  @noSlash path /flowmanager
+  handle @noSlash {
+    redir /flowmanager/ 302
+  }
+
+  # /flowmanager/*  →  /home/* on FlowManager server
+  handle_path /flowmanager/* {
+    rewrite * /home{path}
+    reverse_proxy localhost:8080
+  }
+
+  # every other request untouched → FlowManager root
+  handle {
+    reverse_proxy localhost:8080
+  }
+}
+EOF
+
+# make sure caddy can bind low ports
+setcap 'cap_net_bind_service=+ep' /usr/bin/caddy
+
+systemctl restart caddy
+echo "Caddy reverse-proxy live on http://<host-ip>:81"
+
+# 10. Install update-env script for future updates
 # -----------------------------------------------
 if [ -f "$(dirname "$0")/bin/update-env" ]; then
   echo "Installing update-env..."
