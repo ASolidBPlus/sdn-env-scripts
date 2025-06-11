@@ -17,7 +17,7 @@ if [[ "$run_fm" =~ ^[Yy] ]]; then
 fi
 
 # 2) simple_switch prompt
-read -rp "Include ryu.app.simple_switch? [y/N] " run_ss
+read -rp "Include ryu.app.simple_switch_13? [y/N] " run_ss
 if [[ "$run_ss" =~ ^[Yy] ]]; then
     CONTROLLERS+=("ryu.app.simple_switch_13")
 fi
