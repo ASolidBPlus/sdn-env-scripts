@@ -70,7 +70,7 @@ else
   echo "Warning: 'utils/mininet' dir not found in repo" >&2
 fi
 
-# 6) Update Static HTML Files
+# 5) Update Static HTML Files
 if [ -d "$tmp_dir/www" ]; then
   echo "Installing html files to /var/www..."
   sudo mkdir -p /var/www
@@ -80,14 +80,11 @@ else
 fi
 
 
-# 5) Ensure update-env runs on system startup via cron
+# 6) Ensure update-env runs on system startup via cron
 cron_entry="@reboot /usr/local/bin/update-env"
-# Check if cron entry exists for this user
-if ! crontab -l 2>/dev/null | grep -Fxq "$cron_entry"; then
-  echo "Adding cron job for update-env on reboot..."
-  (crontab -l 2>/dev/null; echo "$cron_entry") | crontab -
+if ! sudo crontab -l 2>/dev/null | grep -Fxq "$cron_entry"; then
+  echo "Adding cron job for update-env on reboot (as root)..."
+  (sudo crontab -l 2>/dev/null; echo "$cron_entry") | sudo crontab -
 else
-  echo "Cron job for update-env already present"
+  echo "Cron job for update-env already present in root crontab"
 fi
-
-echo "update-env complete!"

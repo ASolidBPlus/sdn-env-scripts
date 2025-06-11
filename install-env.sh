@@ -188,7 +188,10 @@ setcap 'cap_net_bind_service=+ep' /usr/bin/caddy
 systemctl restart caddy
 echo "Caddy reverse-proxy live on http://<host-ip>:81"
 
-# 10. Install update-env script for future updates
+# 10. Install extras
+sudo apt install cron nano iputils-ping
+
+# 11. Install update-env script for future updates
 # -----------------------------------------------
 if [ -f "$(dirname "$0")/bin/update-env" ]; then
   echo "Installing update-env..."
