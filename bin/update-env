@@ -70,4 +70,14 @@ else
   echo "Warning: 'utils/mininet' dir not found in repo" >&2
 fi
 
+# 5) Ensure update-env runs on system startup via cron
+cron_entry="@reboot /usr/local/bin/update-env"
+# Check if cron entry exists for this user
+if ! crontab -l 2>/dev/null | grep -Fxq "$cron_entry"; then
+  echo "Adding cron job for update-env on reboot..."
+  (crontab -l 2>/dev/null; echo "$cron_entry") | crontab -
+else
+  echo "Cron job for update-env already present"
+fi
+
 echo "update-env complete!"
