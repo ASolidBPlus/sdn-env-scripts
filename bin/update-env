@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+# update-env: pull down latest templates, bin scripts, and Python utils
+
+set -euo pipefail
+
+# TODO: replace with your actual Git repository URL
+env_repo="https://YOUR_GIT_REPO_URL_HERE.git"
+
+# Temporary clone directory
+tmp_dir=$(mktemp -d)
+trap 'rm -rf "$tmp_dir"' EXIT
+
+echo "Cloning environment repo from $env_repo..."
+if ! git clone --depth 1 "$env_repo" "$tmp_dir"; then
+  echo "Error: failed to clone $env_repo" >&2
+  exit 1
+fi
+
+# 1) Update templates
+if [ -d "$tmp_dir/templates" ]; then
+  echo "Updating /opt/templates..."
+  sudo mkdir -p /opt/templates
+  sudo rm -rf /opt/templates/*
+  sudo cp -r "$tmp_dir/templates/"* /opt/templates/
+  sudo chown -R root:root /opt/templates
+  sudo chmod -R 755 /opt/templates
+else
+  echo "Warning: 'templates' dir not found in repo" >&2
+fi
+
+# 2) Update bin scripts
+if [ -d "$tmp_dir/bin" ]; then
+  echo "Installing bin scripts to /usr/local/bin..."
+  sudo mkdir -p /usr/local/bin
+  sudo install -m 755 "$tmp_dir/bin/"* /usr/local/bin/
+else
+  echo "Warning: 'bin' dir not found in repo" >&2
+fi
+
+# 3) Install Ryu utils into Ryu venv and copy to /opt/utils/ryu
+if [ -d "$tmp_dir/utils/ryu" ]; then
+  echo "Installing Ryu utils into Ryu venv at /opt/dep/ryu39..."
+  source /opt/dep/ryu39/bin/activate
+  pip install --upgrade pip setuptools wheel
+  pip install -e "$tmp_dir/utils/ryu"
+  deactivate
+
+  echo "Copying Ryu utils to /opt/utils/ryu..."
+  sudo mkdir -p /opt/utils/ryu
+  sudo rm -rf /opt/utils/ryu/*
+  sudo cp -r "$tmp_dir/utils/ryu/"* /opt/utils/ryu/
+  sudo chown -R root:root /opt/utils/ryu
+  sudo chmod -R 755 /opt/utils/ryu
+else
+  echo "Warning: 'utils/ryu' dir not found in repo" >&2
+fi
+
+# 4) Install Mininet utils into system Python and copy to /opt/utils/mininet
+if [ -d "$tmp_dir/utils/mininet" ]; then
+  echo "Installing Mininet utils into system Python..."
+  sudo pip3 install --upgrade pip setuptools wheel
+  sudo pip3 install -e "$tmp_dir/utils/mininet"
+
+  echo "Copying Mininet utils to /opt/utils/mininet..."
+  sudo mkdir -p /opt/utils/mininet
+  sudo rm -rf /opt/utils/mininet/*
+  sudo cp -r "$tmp_dir/utils/mininet/"* /opt/utils/mininet/
+  sudo chown -R root:root /opt/utils/mininet
+  sudo chmod -R 755 /opt/utils/mininet
+else
+  echo "Warning: 'utils/mininet' dir not found in repo" >&2
+fi
+
+echo "update-env complete!"

@@ -7,40 +7,62 @@ if [ "$EUID" -ne 0 ]; then
   exit 1
 fi
 
-# 1. Install code-server and configure on port 8081
-# -----------------------------------------------
-# Download & install
+# 0) Pre-create environment directories
+echo "Creating workspace and template directories..."
+mkdir -p /opt/workspace /opt/templates /opt/workspace/ryu
+
+# Set ownership & permissions
+chown root:root /opt/templates
+chmod 755 /opt/templates
+chown student:student /opt/workspace /opt/workspace/ryu
+
+# 1) Install code-server and configure on port 8081
+# ------------------------------------------------
+echo "Installing code-server..."
 curl -fsSL https://code-server.dev/install.sh | sh
 
-# 1.1. Configure code-server password
-mkdir -p /home/student/.config/code-server
-cat <<EOF >/home/student/.config/code-server/config.yaml
+# 1.1) Configure code-server password and workspace
+CONFIG_DIR="/home/student/.config/code-server"
+WORKSPACE_FILE="/home/student/SDN Dev Environment.code-workspace"
+
+echo "Creating code-server config and workspace file..."
+mkdir -p "$CONFIG_DIR"
+cat <<EOF > "$CONFIG_DIR/config.yaml"
 bind-addr: 0.0.0.0:8081
 auth: password
 password: student
 cert: false
 EOF
-chown -R student:student /home/student/.config/code-server
+chown -R student:student "$CONFIG_DIR"
 
-# Create workspace and set ownership
-mkdir -p /opt/scripts
-chown student:student /opt/scripts
+# Create a multi-root VS Code workspace including /opt/workspace and /opt/templates
+cat <<EOF | sudo -u student tee "$WORKSPACE_FILE" > /dev/null
+{
+  "folders": [
+    { "path": "/opt/workspace" },
+    { "path": "/opt/templates" }
+  ],
+  "settings": {}
+}
+EOF
+chown student:student "$WORKSPACE_FILE"
 
 # Disable default service
 systemctl disable --now code-server@student
 
-# Override systemd unit for port & workspace
-mkdir -p /etc/systemd/system/code-server@student.service.d
+# Override systemd unit to launch code-server with our workspace\mkdir -p /etc/systemd/system/code-server@student.service.d
 cat <<EOF >/etc/systemd/system/code-server@student.service.d/override.conf
 [Service]
 ExecStart=
-ExecStart=/usr/bin/code-server --bind-addr 0.0.0.0:8081 /opt/scripts
-WorkingDirectory=/opt/scripts
+ExecStart=/usr/bin/code-server --bind-addr 0.0.0.0:8081 "$WORKSPACE_FILE"
+WorkingDirectory=/opt/workspace
 EOF
 
-# Reload, enable & start
+# Reload, enable & start code-server
 systemctl daemon-reload
 systemctl enable --now code-server@student
+
+echo "Code-server is running at http://<host-ip>:8081 using workspace 'SDN Dev Environment'"
 
 # 2. Add deadsnakes PPA & install Python 3.9 + distutils
 # ------------------------------------------------------
@@ -76,7 +98,6 @@ echo -n "ryu-manager version:  "; ryu-manager --version
 
 echo "\nSetup complete!"
 echo "- Code-server: http://<host-ip>:8081 (pwd in ~/.config/code-server/config.yaml)"
-$1
 
 # 7. Install Mininet from source (full)
 # -------------------------------------
@@ -97,6 +118,7 @@ mn --test pingall
 echo "Done! Mininet is installed."
 
 # 8. Install FlowManager into /opt/dep
+# -------------------------------------
 mkdir -p /opt/dep
 cd /opt/dep
 git clone https://github.com/martimy/flowmanager.git flowmanager
@@ -104,3 +126,12 @@ chown -R student:student /opt/dep/flowmanager
 
 echo "FlowManager installed at /opt/dep/flowmanager"
 
+# 9. Install update-env script for future updates
+# -----------------------------------------------
+if [ -f "$(dirname "$0")/bin/update-env" ]; then
+  echo "Installing update-env..."
+  install -m 755 "$(dirname "$0")/bin/update-env" /usr/local/bin/update-env
+  echo "You can now run 'update-env' to pull templates, bins, and utils."
+else
+  echo "Warning: update-env script not found in bin/. Skipping update-env install." >&2
+fi

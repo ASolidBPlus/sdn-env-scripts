@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# ryuctl: launch ryu-manager with optional FlowManager, simple_switch, and local scripts.
+
+set -euo pipefail
+
+# Collect CLI args for ryu-manager
+RYU_ARGS=("${@}")
+
+# Array to hold controllers/modules
+CONTROLLERS=()
+
+# 1) FlowManager prompt
+default_flowmanager="/opt/dep/flowmanager/flowmanager.py"
+read -rp "Include FlowManager? [y/N] " run_fm
+if [[ "$run_fm" =~ ^[Yy] ]]; then
+    CONTROLLERS+=("$default_flowmanager")
+fi
+
+# 2) simple_switch prompt
+read -rp "Include ryu.app.simple_switch? [y/N] " run_ss
+if [[ "$run_ss" =~ ^[Yy] ]]; then
+    CONTROLLERS+=("ryu.app.simple_switch")
+fi
+
+# 3) Local scripts discovery and selection
+declare -a LOCAL_SCRIPTS=(/opt/workspace/ryu/*.py)
+if [ -e "${LOCAL_SCRIPTS[0]}" ]; then
+    echo "Available local Ryu scripts:"
+    for idx in "${!LOCAL_SCRIPTS[@]}"; do
+        printf "  %d) %s\n" $((idx+1)) "$(basename "${LOCAL_SCRIPTS[$idx]}")"
+    done
+    echo
+    read -rp "Select local scripts by number (e.g. 1 3), or press ENTER to skip: " selections
+    for s in $selections; do
+        if [[ "$s" =~ ^[0-9]+$ ]] && [ "$s" -ge 1 ] && [ "$s" -le ${#LOCAL_SCRIPTS[@]} ]; then
+            CONTROLLERS+=("${LOCAL_SCRIPTS[$((s-1))]}")
+        fi
+    done
+fi
+
+# 4) Execute ryu-manager with all arguments and selected controllers/modules
+exec ryu-manager "${RYU_ARGS[@]}" "${CONTROLLERS[@]}"
