@@ -81,7 +81,7 @@ fi
 
 
 # 6) Ensure update-env runs on system startup via cron
-cron_entry="@reboot /usr/local/bin/update-env"
+cron_entry='@reboot sleep 10 && /usr/local/bin/update-env >> /var/log/update-env.log 2>&1'
 if ! sudo crontab -l 2>/dev/null | grep -Fxq "$cron_entry"; then
   echo "Adding cron job for update-env on reboot (as root)..."
   (sudo crontab -l 2>/dev/null; echo "$cron_entry") | sudo crontab -
