@@ -3,6 +3,9 @@
 
 set -euo pipefail
 
+# Set terminal tab title
+echo -ne '\033]0;Ryu Controller\007'
+
 # Collect CLI args for ryu-manager
 RYU_ARGS=("${@}")
 
