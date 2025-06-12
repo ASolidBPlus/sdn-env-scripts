@@ -30,12 +30,13 @@ def controllerReachableCheck(ip, port):
 
 def createInitialNetwork():
     """
-    This sets up your base Mininet network object. It gives you a chance to connect to your SDN controller.
-
-    Always call this at the top of your topology function. It returns the usable 'net' object.
-
-    Example usage: net = createInitialNetwork()
+    Sets up the base Mininet network object and optionally connects to an SDN controller.
+    Also renames the terminal tab to 'Mininet Controller'.
     """
+    # Set terminal tab title
+    sys.stdout.write('\033]0;Mininet Controller\007')
+    sys.stdout.flush()
+
     net = Mininet(link=TCLink, switch=OVSSwitch, controller=None)
 
     if input("Do you want to connect to an SDN Controller? Y/N: ").strip().lower() == 'y':
@@ -55,6 +56,7 @@ def createInitialNetwork():
         net.addController(DefaultController('c0'))
 
     return net
+
 
 def safeMininetStartupAndExit(net):
     """
