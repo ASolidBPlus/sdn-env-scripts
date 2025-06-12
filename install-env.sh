@@ -128,6 +128,21 @@ chown -R student:student /opt/dep/flowmanager
 
 echo "FlowManager installed at /opt/dep/flowmanager"
 
+# 8.1 Install ttyd and Override to run as student directly into bash
+sudo apt install ttyd
+echo "Configuring ttyd to launch as 'student'..."
+mkdir -p /etc/systemd/system/ttyd.service.d
+cat <<EOF >/etc/systemd/system/ttyd.service.d/override.conf
+[Service]
+ExecStart=
+ExecStart=/usr/bin/ttyd --check-origin=false -p 7681 bash
+User=student
+EOF
+
+systemctl daemon-reload
+systemctl restart ttyd
+echo "ttyd now runs as 'student' on port 7681 (proxied via Caddy)."
+
 
 # 9. Caddy reverse-proxy  (port 81)
 echo "Installing Caddy…"
@@ -161,6 +176,11 @@ cat > /etc/caddy/Caddyfile <<'EOF'
   # /code/* → code-server on 8081
   handle_path /code/* {
     reverse_proxy localhost:8081
+  }
+
+  # /terminal/* → ttyd on 7681
+  handle_path /terminal/* {
+    reverse_proxy localhost:7681
   }
 
   # redirect bare /flowmanager → /flowmanager/
