@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# mn-host — Attach to a Mininet host and set title + prompt
+# mn-host — Enter a Mininet host's namespace with a labelled terminal
+# Usage: mn-host h1
 
 set -euo pipefail
 
@@ -10,17 +11,15 @@ fi
 
 HOST="$1"
 
-# Find the namespace PID
+# Find the host’s namespace PID
 PID=$(pgrep -f "mininet:${HOST}") || {
   echo "❌ Mininet host '$HOST' not found." >&2
   exit 1
 }
 
-# Set terminal tab title and custom PS1
-sudo mnexec -a "$PID" env bash --norc --noprofile -i <<EOF
-# Set tab title
-echo -ne "\033]0;${HOST}@mininet\007"
-# Set prompt
-export PS1="\[\e[1;32m\]${HOST}@mininet:\w\$ \[\e[0m\]"
-exec bash --norc --noprofile -i
-EOF
+# Set terminal tab title and custom prompt (exported before launching shell)
+sudo mnexec -a "$PID" bash --norc -c "
+  echo -ne '\033]0;${HOST}@mininet\007'
+  export PS1='\[\e[1;32m\]${HOST}@mininet\$ \[\e[0m\]'
+  exec bash --norc --noprofile
+"
