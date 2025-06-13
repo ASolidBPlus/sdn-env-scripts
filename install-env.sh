@@ -134,10 +134,15 @@ echo "Configuring ttyd to launch as 'student'..."
 mkdir -p /etc/systemd/system/ttyd.service.d
 cat <<EOF >/etc/systemd/system/ttyd.service.d/override.conf
 [Service]
+# clear the old ExecStart
 ExecStart=
+# set your working dir
+WorkingDirectory=/opt/workspace
+# start ttyd as student on port 7681
 ExecStart=/usr/bin/ttyd --check-origin=false -p 7681 bash
 User=student
 EOF
+
 
 systemctl daemon-reload
 systemctl restart ttyd
