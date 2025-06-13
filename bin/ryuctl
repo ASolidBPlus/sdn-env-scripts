@@ -5,6 +5,8 @@ set -euo pipefail
 
 # Set terminal tab title
 echo -ne '\033]0;Ryu Controller\007'
+echo 'Welcome to the Ryu Helper Script, made by UniSA'
+echo "This simplifies the ryu-manager process, so you don't have to do much command line work! :)"
 
 # Collect CLI args for ryu-manager
 RYU_ARGS=("${@}")
